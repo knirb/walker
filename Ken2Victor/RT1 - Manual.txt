@@ -1,0 +1,120 @@
+RT1 - Manual
+Promsutipong KENGKIJ (k.promsutipong@srd.mech.tohoku.ac.jp)
+
+######################################################################################################################################################
+#
+#	Starting the Machine
+#
+######################################################################################################################################################
+
+
+How to start the machine
+1. Open the battery box and turn the switch on.
+2. Press the power button on the panel and hold it a second.
+[Note] You can skip the audio message by pressing power button.
+3. Now the machine is started and can be operated based on company's hardware code.
+
+
+How to run your code to the machine
+1. Plug the usb cable from serial board to your computer
+2. On the terminal 
+change the permission for usb port, type: 
+	sudo chmod a+rw /dev/ttyUSB0
+change the speed of the port, type:
+	stty -F /dev/ttyUSB0 raw -echo speed 115200
+***repeat the above line until the terminal replies back 115200 (should be only two times)
+3. Roscore
+4. Run RT1 node 
+	rosrun ros_start rosrt_rt1
+
+
+How to remotely control the machine
+1. Plug in the mobile battery to the raspberrypi
+2. Plug in the usb cable from serial board to your raspberrypi
+3. Use ssh to connect to raspberrypi from your computer's terminal
+4. On the terminal 
+change the permission for usb port, type: 
+	sudo chmod a+rw /dev/ttyUSB0
+change the speed of the port, type:
+	stty -F /dev/ttyUSB0 raw -echo speed 115200
+***repeat the above line until the terminal replies back 115200 (should be only two times)
+5. Roscore
+6. Run RT1 node
+	rosrun ros_start rosrt_rt1 
+
+
+Try running codes (v.Ken)
+1. Running velocity command center node (compulsory*)
+	rosrun ros_start rt1_con
+
+2. Keyboard Control 
+Use this node to control RT1 by keyboard. Press arrow button to control the direction of RT1. Press pageup button to stop the machine.
+***Please be careful while using this code because the code is just simply designed to test publishing velocity data to RT1.
+	rosrun keyboard rt1_key
+
+3. Handle Control
+Use this node to control RT1 by pushing, pulling, or turning the handle.
+***Please don't touch the handle of RT1 at the moment you run this code. Run the code then hold the handle.
+***The code is not yet perfect and has some points to be improved.
+	rosrun ros_start rt1_handle
+
+4. Run whole system
+Including: rosrt_rt1, rt1_con, rt1_handle
+	roslaunch ros_start rt1.launch
+
+
+***In case there are any problems regarding the system and the machine, please contact me or laboratory's member.
+***In case there are any bugs or problems running my code, please contact me.
+
+
+######################################################################################################################################################
+#
+#	Reading the sensor
+#
+######################################################################################################################################################
+
+Sensor Data
+1. velocity.linear 
+2. velocity.angular
+3. handle.force
+4. handle.torque
+5. accel.linear
+6. accel.torque
+
+
+Method
+1. Write the subscriber node, print out the data.
+2. rostopic echo [sensor data address]
+	rostopic echo /rosrt_rt1/velocity/linear/x 
+3. rqt_plot 
+	type sensor data address and press + to add data to the plot.
+
+
+######################################################################################################################################################
+#
+#	Publisher, Subscriber, Code breakdown
+#
+######################################################################################################################################################
+Node 
+1. rosrt_rt1
+Sub: cmd_vel
+Pub: rosrt_rt1
+ - Connect serial board with the hardware. 
+ - Subscribe to cmd_vel. (command_velocity)
+ - Convey cmd_vel data to the hardware.
+ - Publish sensor data.
+
+2. rt1_handle
+Sub: rosrt_rt1
+Pub: rt1_con/vel
+ - Subscribe to sensor data
+ - Adjust velocity according to force, torque on the handle
+ - Publish velocity (both linear and angular) to rt1_con/vel.
+
+3. rt1_con
+Sub: rt1_con/vel (rt1_con/difficulty --- for obstacle avoidance, you can leave or delete it)
+Pub: cmd_vel 
+ - Subscribe to velocity data from handle.
+ - (Take data of obstacle to apply brake)
+ - Calculate final velocity.
+ - Publish final velocity to cmd_vel.
