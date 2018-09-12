@@ -1,0 +1,5 @@
+<launch>
+    <!-- Keyboard -->
+	<node name="rt1_key"      pkg="keyboard"  type="rt1_key"/>
+	<node name="keyboard"     pkg="keyboard"  type="keyboard"/>
+</launch>
